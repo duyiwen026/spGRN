@@ -16,19 +16,19 @@ col_attrs = {"CellID": np.array(x.obs_names)}
 lp.create("sample.loom",x.X.transpose(),row_attrs,col_attrs)
 exit   #退出ipython包
 
-#编辑脚本
+#
 nano run_pyscenic.sh
-#路径下需要：hs_hgnc_tfs.txt。
+#need：hs_hgnc_tfs.txt。
 #hg38__refseq-r80__10kb_up_and_down_tss.mc9nr.feather
 #reg.csv
-#pyscenic 的3个步骤之 GRN
+#pyscenic--- GRN
 pyscenic grn \
 --num_workers 20 \
 --output adj.sample.tsv \
 --method grnboost2 \
 sample.loom \
-hs_hgnc_tfs.txt    #转录因子文件，1839  个基因的名字列表
-#PYSCENIC 的3个步骤之 CISTARGET
+hs_hgnc_tfs.txt    
+#PYSCENIC--- CISTARGET
 pyscenic ctx \
 adj.sample.tsv \
 hg38__refseq-r80__10kb_up_and_down_tss.mc9nr.feather \
@@ -38,24 +38,22 @@ hg38__refseq-r80__10kb_up_and_down_tss.mc9nr.feather \
 --output reg.csv \
 --num_workers 3 \
 --mask_dropouts
-#PYSCENIC 的3个步骤之 AUCELL
+#PYSCENIC--- AUCELL
 pyscenic aucell \
 sample.loom \
 reg.csv \
 --output sample_SCENIC.loom \
 --num_workers 3
-#完成编辑后，按下 Ctrl + O(字母 O，不是数字 0)，这会提示你保存文件
-#按 Ctrl + X 退出编辑器
-#基于bash
+# Ctrl + O(save)
+# Ctrl + X 
+#bash
 chmod +x run_pyscenic.sh
-
-#运行脚本
 ./run_pyscenic.sh
 
 
 
 
-#利用SCENIC结果去验证RT、TT
+#SCENIC---RT、TT
 library(foreach)
 library(Seurat) 
 library(SCENIC)
@@ -78,23 +76,20 @@ RT <- read.csv('/data/scenic/network2/RT_stlearn.csv')
 TT <- read.csv('/data/scenic/network2/TT_stlearn.csv')
 
 loom <- open_loom('sample_SCENIC.loom')                 #导入sample_SCENIC.loom文件
-#首先我们要把导入的loom处理成R中的数据
-#获取regulon        regulon定义：TF与作用的genes
-#1.提取每一个TF与每一个gene作用系数
+#loom
+#1
 regulons_incidMat <- get_regulons(loom, column.attr.name="Regulons")   
-regulons_incidMat[1:4,1:4]    #在这里就可以看出 每一个TF与每一个gene的作用数值
-regulons <- regulonsToGeneLists(regulons_incidMat)      #做成一个list  TF与其作用gene的list  TF+genes  个人感觉这里假如后面想分析这个TF，则这里可以画这个TF与其作用的gene的网络图                             
-#2.获得regulon的AUC  即TF在每一个细胞的激活程度
+regulons_incidMat[1:4,1:4]  
+regulons <- regulonsToGeneLists(regulons_incidMat)      
 regulonAUC <- get_regulons_AUC(loom,column.attr.name='RegulonsAUC')
-regulonAUC[1:4,1:4]  #regulonAUC这个文件含有每一个TF在各个细胞中的表达量  列名为细胞名   行名为TF
-#3.找出在这单细胞数据中 高表达的TF
+regulonAUC[1:4,1:4] 
 regulonAucThresholds <- get_regulon_thresholds(loom)     
-tail(regulonAucThresholds[order(as.numeric(names(regulonAucThresholds)))])   #这里可以看出哪一些TF是在这个单细胞数据中高表达的
+tail(regulonAucThresholds[order(as.numeric(names(regulonAucThresholds)))]) 
 x <- regulonAucThresholds[order(as.numeric(names(regulonAucThresholds)))]
 x <- as.data.frame(x)
 x$weight <- rownames(x)
 top100_TF <- x %>% 
-  arrange(desc(weight)) %>%   # 根据指定列降序排序
+  arrange(desc(weight)) %>%  
   slice(1:100)  
 
 xx1 <- list()
@@ -108,7 +103,7 @@ scenic_TT <- subset(scenic_TT,x%in%c(top100_TF$x))
 
 #cellInfo <- read.csv("m1_meta.csv",row.names = 1)
 #colnames(cellInfo)[9] <- "CellType"
-#利用已有的靶基因筛选SCENIC中的转录因子
+
 RT$sign <- "(+)"
 RT <- tidyr::unite(RT,"to_sign",tf,sign,sep = "",remove = F)
 TT$sign <- "(+)"
