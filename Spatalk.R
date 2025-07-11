@@ -1,4 +1,4 @@
-#spatalk_函数设置----------
+#spatalk----------
 .generate_ggi_res <- function(ggi_tf, cell_pair, receptor_name, st_data, max_hop, co_exp_ratio) {
   .co_exp <- function(x) {
     x_1 <- x[1:(length(x)/2)]
@@ -287,24 +287,23 @@ LRT_path <- function(obj, celltype_sender, celltype_receiver, ligand, receptor, 
 
 #ligands <- list('TGFB1','GRN')
 #receptors <- list('TGFBR2', 'TNFRSF1A')
-# 创建一个空的列表来存储所有结果
-
+# 
 Rec_TFs_Target <- list()
-#下面这个改clu
+#
 if (length(ligands) == length(receptors)) {
   for (i in seq_along(ligands)) {
-    # 取出对应的 ligand 和 receptor
+    #  ligand and receptor
     current_ligand <- ligands[[i]]
     current_receptor <- receptors[[i]]
-    # 构建函数调用
+    # 
     result <- LRT_path(obj = object,
                        celltype_sender = 'Malignant_Epithelial',
                        celltype_receiver = 'cluster2',
                        ligand = current_ligand,
                        receptor = current_receptor)
-    # 创建一个结果标签，方便区分结果
+    
     result_label <- paste0("result_", i)
-    # 将结果存储到列表中
+    
     Rec_TFs_Target[[result_label]] <- result
   }
   
@@ -340,7 +339,7 @@ LRT_path_out <- function(obj, ligands, receptors, sender_celltype, receiver_cell
   return(Rec_TFs_Target)
 }
 
-# 调用函数并获取结果
+
 ligands <- list('TGFB1', 'GRN')
 receptors <- list('TGFBR2', 'TNFRSF1A')
 sender_celltype <- 'Malignant_Epithelial'
@@ -382,7 +381,7 @@ obj <- createSpaTalk(st_data = st_data, st_meta = st_meta,species = "Human",if_s
 # sc_celltype: cell type for each cell
 sc_data <- sc@assays$RNA@counts
 sc_meta <- sc@meta.data
-sc_meta1 <- as.data.frame(sc_meta[,13])#celltype的这一列
+sc_meta1 <- as.data.frame(sc_meta[,13])#celltype
 rownames(sc_meta1) <- rownames(sc_meta)
 colnames(sc_meta1) <- c('celltype')
 sc_celltype <- as.character(sc_meta1$celltype)
@@ -391,7 +390,7 @@ sc_celltype <- as.character(sc_meta1$celltype)
 #load("pathways.rda")
 load('/data/lrpairs.rda')
 load('/data/pathways.rda')
-#命令行执
+
 #export OMP_NUM_THREADS=1
 
 obj <- dec_celltype(object = obj,sc_data = sc_data,sc_celltype = sc_celltype)
@@ -408,7 +407,7 @@ write.csv(obj@tf,'tf.csv')
 
 LRT_out <- LRT_path_out(object, ligands, receptors, sender_celltype, receiver_celltype)
 
-#针对恶性细胞与myCAF细胞的调控网络
+
 LR <- read.csv('lrpair.csv',row.names = 1)
 RT <- read.csv('tf.csv',row.names = 1)
 LR <- read.csv('/data /lrpair.csv',row.names = 1)
@@ -417,9 +416,9 @@ RT <- read.csv('/data/tf.csv',row.names = 1)
 LR <- subset(LR,celltype_sender%in%c('Malignant_Epithelial')&celltype_receiver%in%c('CAFs_myCAF_like'))
 RT<- subset(RT,celltype_sender%in%c('Malignant_Epithelial')&celltype_receiver%in%c('CAFs_myCAF_like'))
 
-# 根据 column_to_sort 列的值进行排序
+# column_to_sort
 sorted_LR <- LR[order(LR$score,decreasing = TRUE), ]
-# 选择 column_to_select 列的前三十个不重复的数据
+
 top_30_LR <- (head(sorted_LR$ligand, 30))
 LR <- subset(LR,ligand%in%c(top_30_LR))
 RT <- subset(RT,receptor%in%c(LR$receptor))
@@ -449,7 +448,7 @@ LRT_path_out <- function(object, ligands, receptors, sender_celltype, receiver_c
 }
 LRT_out <- LRT_path_out(object, ligands, receptors, sender_celltype, receiver_celltype)
 
-########读取后运行这里!!!!!!!!!!!!
+########
 
 LR<- subset(LR,celltype_sender%in%c('Malignant_Epithelial')&celltype_receiver%in%c('CAFs_myCAF_like'))
 RT<- subset(RT,celltype_sender%in%c('Malignant_Epithelial')&celltype_receiver%in%c('CAFs_myCAF_like'))
